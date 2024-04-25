@@ -18,7 +18,7 @@ app.use((err, req: Request, res: Response) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 runServer();
 
