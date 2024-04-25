@@ -1,20 +1,32 @@
 {
-  "name": "smart_contract",
+  "name": "ivipex-back",
   "version": "1.0.0",
-  "description": "",
+  "description": "This project is exchange for brasil created by Ivipex",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "format": "eslint src/**/*.ts --fix"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamrosada/ivipex-back.git"
+
+  },
+  "keywords": [
+    "exchange"
+  ],
+  "author": "IvipEx",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamrosada/ivipex-back/issues"
+  },
+  "homepage": "https://github.com/iamrosada/ivipex-back#readme",
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-waffle": "^2.0.6",
-    "chai": "^5.1.0",
-    "ethereum-waffle": "^4.0.10",
-    "ethers": "^6.11.1",
-    "hardhat": "^2.22.2"
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
   }
 }
