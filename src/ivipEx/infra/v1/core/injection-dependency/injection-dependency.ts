@@ -1,6 +1,6 @@
-import { UserController } from '../controller/user/user-controller';
-import { PrismaUsersRepository } from '../repositories/prisma-customer-repository';
-import { UserUseCase } from '../../../application/usecases/user/create-user';
+import { UserUseCase } from '../../../../application/usecases/user/create-user';
+import { UserController } from '../../controller/user/user-controller';
+import { PrismaUsersRepository } from '../../repositories/prisma-customer-repository';
 
 /**
  * Iniciar Repository
