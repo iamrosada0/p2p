@@ -5,16 +5,16 @@ import { PrismaUsersRepository } from '../../repositories/prisma-customer-reposi
 /**
  * Iniciar Repository
  */
-const UserRepo = new PrismaUsersRepository();
+const userRepo = new PrismaUsersRepository();
 
 /**
  * Iniciamos casos de uso
  */
 
-const userUseCase = new UserUseCase(UserRepo);
+const userUseCase = new UserUseCase(userRepo);
 
 /**
  * Iniciar User Controller
  */
 
-export const UserCtrl = new UserController(userUseCase);
+export const userCtrl = new UserController(userUseCase);
