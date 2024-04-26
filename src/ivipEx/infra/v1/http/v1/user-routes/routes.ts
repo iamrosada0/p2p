@@ -3,7 +3,7 @@ import { userCtrl } from '../../../core/injection-dependency/injection-dependenc
 import { app } from '../../../../../server';
 
 export default function runServer() {
-  const router = express.Router();
-  router.post('/register', userCtrl.registerUser);
-  app.use('/', router);
+  const apiV1Router = express.Router();
+  apiV1Router.post('/register', userCtrl.registerUser);
+  app.use('/', apiV1Router);
 }
