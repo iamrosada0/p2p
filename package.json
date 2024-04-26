@@ -4,7 +4,7 @@
   "description": "This project is exchange for brasil created by Ivipex",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon  src/ivipex/server.ts  --exec ts-node-dev",
+    "dev": "nodemon  src/server.ts  --exec ts-node-dev",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
