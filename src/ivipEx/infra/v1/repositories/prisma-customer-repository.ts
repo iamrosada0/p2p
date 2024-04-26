@@ -1,33 +1,51 @@
 import { UserRepository } from '../../../application/repositories/user-repository';
 import { UserEntity } from '../../../domain/user/entity/user';
-import { prisma } from '../database/prisma/prisma';
+import { User, prisma } from '../database/prisma/prisma';
 
 export class PrismaUsersRepository implements UserRepository {
-  async findById(id: string): Promise<UserEntity | null> {
+  async findById(uuid: string): Promise<UserEntity | null> {
     const foundUser = await prisma.user.findUnique({
       where: {
-        id: id,
+        uuid: uuid,
       },
     });
 
-    return foundUser;
+    if (!foundUser) return null;
+
+    return this.createUserEntity(foundUser);
   }
 
-  async findByUserName(name: string): Promise<UserEntity | null> {
+  async findByEmail(email: string): Promise<UserEntity | null> {
     const foundUser = await prisma.user.findUnique({
       where: {
-        name: name,
+        email: email,
       },
     });
 
-    return foundUser;
+    if (!foundUser) return null;
+
+    return this.createUserEntity(foundUser);
   }
 
   async registerUser(user: UserEntity): Promise<void> {
     await prisma.user.create({
       data: {
         uuid: user.uuid,
+        email: user.email,
+        updatedAt: String(user.updatedAt),
+        createdAt: String(user.createdAt),
+        password: user.password,
       },
     });
+  }
+
+  private createUserEntity(prismaUser: User): UserEntity {
+    return {
+      uuid: prismaUser.uuid,
+      email: prismaUser.email!,
+      password: prismaUser.password,
+      updatedAt: prismaUser.updatedAt,
+      createdAt: prismaUser.createdAt,
+    };
   }
 }
