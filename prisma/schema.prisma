@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./src/ivipex/infra/v1/database/sql/dev.db"
+  url      = "file:../src/infra/database/sql/dev.db"
 }
 
 model User {
