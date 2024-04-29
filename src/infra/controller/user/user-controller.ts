@@ -2,13 +2,16 @@ import { Request, Response } from 'express';
 import { UserUseCase } from '../../../application';
 
 export class UserController {
-  constructor(private userUseCase: UserUseCase) {}
+  constructor(private userUseCase: UserUseCase) {
+    this.registerUser = this.registerUser.bind(this);
+  }
 
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { password, email } = req.body;
+      console.log(password, 'password');
 
-      await this.userUseCase.registerUser(email, password);
+      await this.userUseCase.registerUser(password, email);
       res.status(201).json({ message: 'User registered successfully' });
     } catch (error: unknown) {
       if (error instanceof Error) {
