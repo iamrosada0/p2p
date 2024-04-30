@@ -17,29 +17,30 @@ export class TransactionValue implements TransactionEntity {
   public createdAt: Date | undefined;
   public updatedAt: Date | undefined;
 
-  constructor(userId: string) {
+  constructor(userId: string, toAddress: string, amountInEther: number) {
     // Initialize properties
     this.userId = userId;
     this.createdAt = new Date();
     this.updatedAt = new Date();
+    from: this.addressUserWallet,
 
+    this.to: toAddress,
+    this.value= web3.utils.toWei(amountInEther.toString(), 'ether'),
+    this.gas=this.gasLimit,
+    this.gasPrice: this.gasPrice,
+    this.nonce: this.nonce,
     // Generate wallet
-    const privateKeyBuffer = randomBytes(32);
-    const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
-    this.privateKey = privateKeyBuffer.toString('hex');
-    this.publicKey = wallet.getPublicKeyString();
-    this.addressUserWallet = wallet.getChecksumAddressString();
+    // const privateKeyBuffer = randomBytes(32);
+    // const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
+    // this.privateKey = privateKeyBuffer.toString('hex');
+    // this.publicKey = wallet.getPublicKeyString();
+    // this.addressUserWallet = wallet.getChecksumAddressString();
   }
 
   // Method to sign the transaction
-  public signTransaction(web3: Web3, toAddress: string, amountInEther: number): string {
+  public signTransaction(web3: Web3): string {
     const transactionObject = {
-      from: this.addressUserWallet,
-      to: toAddress,
-      value: web3.utils.toWei(amountInEther.toString(), 'ether'),
-      gas: this.gasLimit,
-      gasPrice: this.gasPrice,
-      nonce: this.nonce,
+
     };
 
     const signedTransaction = web3.eth.accounts.signTransaction(transactionObject, this.privateKey);
