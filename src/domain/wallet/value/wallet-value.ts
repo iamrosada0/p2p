@@ -12,7 +12,7 @@ export class WalletValue implements WalletEntity {
   public createdAt: Date | undefined;
   public updatedAt: Date | undefined;
 
-  constructor({ userId }: Omit<WalletValue, 'uuid'>) {
+  constructor(userId: string) {
     this.uuid = randomUUID();
     this.privateKey = Wallet.generate().getPrivateKeyString();
     this.userId = userId;
