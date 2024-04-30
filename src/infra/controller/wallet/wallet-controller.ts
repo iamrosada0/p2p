@@ -10,8 +10,8 @@ export class WalletController {
     try {
       const { userId } = req.body;
 
-      await this.WalletUseCase.generateWallet(userId);
-      res.status(201).json({ message: 'Wallet registered successfully' });
+      const wallet = await this.WalletUseCase.generateWallet(userId);
+      res.status(201).json({ message: 'Wallet registered successfully', wallet });
     } catch (error: unknown) {
       if (error instanceof Error) {
         res.status(500).json({ error: error.message });
