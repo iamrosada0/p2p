@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from 'crypto';
-import Wallet from 'ethereumjs-wallet';
 import Web3 from 'web3';
 import { TransactionEntity } from '../entity/transactions';
 
 export class TransactionValue implements TransactionEntity {
-  public value: unknown | string | number;
+  public value: string;
   public recipientAddress: string;
   public gasLimit: number;
   public gasPrice: number;
@@ -14,36 +14,45 @@ export class TransactionValue implements TransactionEntity {
   public privateKey: string;
   public addressUserWallet: string;
   public userId: string;
-  public createdAt: Date | undefined;
-  public updatedAt: Date | undefined;
+  public web3: Web3;
+  public createdAt: Date;
+  public updatedAt: Date;
 
-  constructor(userId: string, toAddress: string, amountInEther: number) {
-    // Initialize properties
+  constructor(
+    userId: string,
+    toAddress: string,
+    amountInEther: number,
+    web3: Web3,
+    privateKey: string | undefined,
+    publicKey: string | undefined,
+    addressUserWallet: string | undefined,
+  ) {
     this.userId = userId;
     this.createdAt = new Date();
     this.updatedAt = new Date();
-    from: this.addressUserWallet,
+    this.web3 = web3;
 
-    this.to: toAddress,
-    this.value= web3.utils.toWei(amountInEther.toString(), 'ether'),
-    this.gas=this.gasLimit,
-    this.gasPrice: this.gasPrice,
-    this.nonce: this.nonce,
-    // Generate wallet
-    // const privateKeyBuffer = randomBytes(32);
-    // const wallet = Wallet.fromPrivateKey(privateKeyBuffer);
-    // this.privateKey = privateKeyBuffer.toString('hex');
-    // this.publicKey = wallet.getPublicKeyString();
-    // this.addressUserWallet = wallet.getChecksumAddressString();
-  }
+    // Generate random UUID
+    this.uuid = randomBytes(16).toString('hex');
 
-  // Method to sign the transaction
-  public signTransaction(web3: Web3): string {
-    const transactionObject = {
+    // Set recipient address
+    this.recipientAddress = toAddress;
 
-    };
+    // Convert amount to wei
+    this.value = this.web3.utils.toWei(amountInEther.toString(), 'ether');
 
-    const signedTransaction = web3.eth.accounts.signTransaction(transactionObject, this.privateKey);
-    return signedTransaction.rawTransaction!;
+    // Set gas limit and price
+    this.gasLimit = 21000; // Default gas limit
+    this.gasPrice = 100; // Default gas price
+
+    // Set nonce (replace this with your logic to calculate nonce)
+    this.nonce = 0;
+
+    // Set user wallet address (replace this with your logic to get user's wallet address)
+    this.addressUserWallet = addressUserWallet as any;
+
+    // Set public and private keys (replace this with your logic to generate or retrieve keys)
+    this.publicKey = publicKey as any;
+    this.privateKey = privateKey as any;
   }
 }
