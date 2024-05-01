@@ -11,4 +11,9 @@ export class WalletUseCase {
 
     return walletGenerated;
   };
+
+  public findDetailWalletByUserId = async (userId: string) => {
+    const foundUser = await this.findDetailWalletByUserId(userId);
+    return foundUser;
+  };
 }
