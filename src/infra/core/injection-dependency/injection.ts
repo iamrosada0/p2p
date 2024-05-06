@@ -1,5 +1,5 @@
 import { UserUseCase, WalletUseCase } from '../../../application';
-import { TransactionUseCase } from '../../../application/usecases/transaction/create-transacttion';
+import { TransactionUseCase } from '../../../application/usecases/transaction/create-transaction';
 import { TransactionController, UserController, WalletController } from '../../controller';
 import { PrismaTransactionRepository, PrismaUsersRepository, PrismaWalletRepository } from '../../repositories';
 
@@ -15,7 +15,7 @@ const transactionRepo = new PrismaTransactionRepository();
 
 const userUseCase = new UserUseCase(userRepo);
 const walletUseCase = new WalletUseCase(walletRepo);
-const transactionUseCase = new TransactionUseCase(transactionRepo);
+const transactionUseCase = new TransactionUseCase(transactionRepo, walletRepo, process.env.APP_INFURA_ID_PROJECT!);
 
 /**
  * Iniciar  Controller
