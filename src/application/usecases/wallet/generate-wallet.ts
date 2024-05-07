@@ -13,7 +13,7 @@ export class WalletUseCase {
   };
 
   public findDetailWalletByUserId = async (userId: string) => {
-    const foundUser = await this.findDetailWalletByUserId(userId);
+    const foundUser = await this.walletRepository.findDetailWalletByUserId(userId);
     return foundUser;
   };
 }
