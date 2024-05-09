@@ -19,6 +19,7 @@ export class UserUseCase {
 
     return userCreated;
   };
+
   public getDetailUser = async (uuid: string) => {
     const user = await this.userRepository.findById(uuid);
     return user;

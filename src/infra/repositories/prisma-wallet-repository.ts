@@ -3,6 +3,12 @@ import { WalletEntity } from '../../domain';
 import { prisma } from '../database/prisma/prisma';
 
 export class PrismaWalletRepository implements WalletRepository {
+  async findDetailWalletByUserId(userId: string): Promise<WalletEntity | null> {
+    const foundUser = await prisma.wallet.findFirst({
+      where: { userId: userId },
+    });
+    return foundUser;
+  }
   async generateWallet(wallet: WalletEntity): Promise<WalletEntity> {
     const walletCreated = await prisma.wallet.create({
       data: {
