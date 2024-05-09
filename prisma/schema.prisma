@@ -34,7 +34,7 @@ model Wallet {
 model Transaction {
   uuid      String @id @unique
   from      String
-  useId     String
+  userId    String
   to        String
   gas       String
   value     String
