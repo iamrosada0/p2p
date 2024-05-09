@@ -30,3 +30,16 @@ model Wallet {
   createdAt         String
   updatedAt         String
 }
+
+model Transaction {
+  uuid      String @id @unique
+  from      String
+  userId    String
+  to        String
+  gas       String
+  value     String
+  gasprice  String
+  nonce     String
+  createdAt String
+  updatedAt String
+}
