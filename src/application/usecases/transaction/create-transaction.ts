@@ -1,21 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import Web3 from 'web3';
 import { TransactionValue } from '../../../domain/transaction/value/transaction-value';
 import { TransactionRepository, WalletRepository } from '../../repositories';
-import Web3 from 'web3';
 
 export class TransactionUseCase {
   private readonly web3: Web3;
+  private nonce: number | undefined; // Define nonce property
 
   constructor(
     private readonly transactionRepository: TransactionRepository,
     private readonly walletRepository: WalletRepository,
     infuraProjectId: string,
   ) {
-    this.web3 = new Web3(`https://mainnet.infura.io/v3/${infuraProjectId}`);
+    // Initialize Web3 with the Infura endpoint
+    this.web3 = new Web3(`https://holesky.infura.io/v3/${infuraProjectId}`);
   }
 
   public transaction = async (userId: string, toAddress: string, amountInEther: number) => {
+    // Fetch user wallet details
     const detailUserWallet = await this.walletRepository.findDetailWalletByUserId(userId);
 
+    // Create TransactionValue object
     const transactionValue = new TransactionValue(
       userId,
       toAddress,
@@ -26,46 +31,59 @@ export class TransactionUseCase {
       detailUserWallet?.addressUserWallet,
     );
 
-    // Construct the transaction object
-    const transactionObject = {
-      from: detailUserWallet?.addressUserWallet,
-      to: transactionValue.recipientAddress,
-      value: transactionValue.value, // Use the amount in Wei from TransactionValue
-      gas: this.web3.utils.toHex(transactionValue.gasLimit), // Convert gas limit to hexadecimal
-      gasPrice: this.web3.utils.toHex(transactionValue.gasPrice), // Convert gas price to hexadecimal
-      nonce: this.web3.utils.toHex(transactionValue.nonce), // Convert nonce to hexadecimal
-    };
+    console.log({ transactionValue }, '----?>DEUS');
 
-    const subscription = await this.web3.eth.subscribe('pendingTransactions');
+    try {
+      // Fetch nonce and set it
+      this.nonce = await this.fetchNonce(detailUserWallet?.addressUserWallet);
 
-    subscription.on('data', async (transactionHash: string) => {
-      try {
-        const transaction = await this.web3.eth.getTransaction(transactionHash);
-        if (
-          transaction &&
-          transaction.to &&
-          transaction.to.toLowerCase() === detailUserWallet?.addressUserWallet?.toLowerCase()
-        ) {
-          console.log('Usuário recebeu uma nova transação:', transaction);
-          // Aqui você pode notificar o usuário ou realizar outras ações necessárias
-        }
-      } catch (error) {
-        console.error('Erro ao obter detalhes da transação:', error);
-      }
-    });
+      // Increase the gas price to ensure it's higher than the base fee
+      const transactionObject = {
+        from: detailUserWallet?.addressUserWallet,
+        to: transactionValue.recipientAddress,
+        value: transactionValue.value, // Use the amount in Wei from TransactionValue
+        gas: this.web3.utils.toHex(transactionValue.gasLimit), // Convert gas limit to hexadecimal
+        gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()), // Convert gas price to hexadecimal
+        nonce: this.web3.utils.toHex(this.nonce), // Convert nonce to hexadecimal
+      };
 
-    // Sign the transaction
-    const signedTransaction = await this.web3.eth.accounts.signTransaction(
-      transactionObject,
-      transactionValue.privateKey,
-    );
+      // Adjust gas price to be higher than the base fee
+      transactionObject.gasPrice = this.web3.utils.toHex(await this.web3.eth.getGasPrice());
 
-    // Send the signed transaction to the network
-    const transactionProcessed = await this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
+      // Sign the transaction
+      const signedTransaction = await this.web3.eth.accounts.signTransaction(
+        transactionObject,
+        transactionValue.privateKey,
+      );
 
-    // Save the transaction details to the repository
-    const transactionProcessedSuccessful = await this.transactionRepository.transaction(transactionProcessed);
+      // Send the signed transaction to the network
+      await this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
 
-    return transactionProcessedSuccessful;
+      // Save the transaction details to the repository
+      const transactionValueCopy = { ...transactionValue };
+
+      // Add nonce to the copy and convert it to hexadecimal
+      transactionValueCopy.nonce = Number(this.web3.utils.toHex(this.nonce));
+
+      const transactionProcessedSuccessful = await this.transactionRepository.transaction(transactionValueCopy);
+
+      return transactionProcessedSuccessful;
+    } catch (error: any) {
+      console.error('Error while sending transaction:', error);
+      throw error; // Rethrow the error for handling in the calling function
+    }
   };
+
+  private async fetchNonce(addressUserWallet: string | undefined): Promise<number> {
+    if (!addressUserWallet) {
+      throw new Error('Sender address is undefined');
+    }
+
+    try {
+      const nonce = await this.web3.eth.getTransactionCount(addressUserWallet, 'pending');
+      return Number(nonce);
+    } catch (error: any) {
+      throw new Error('Error fetching nonce: ' + error.message);
+    }
+  }
 }
