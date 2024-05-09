@@ -1,7 +1,7 @@
 import { WalletEntity } from '../../wallet/entity/wallet';
 
 export interface TransactionEntity extends WalletEntity {
-  value: unknown | string | number;
+  value: string;
   recipientAddress: string;
   gasLimit: number;
   gasPrice: number;
