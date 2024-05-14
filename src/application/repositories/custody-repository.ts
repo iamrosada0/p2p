@@ -15,7 +15,7 @@ export interface CustodyRepository {
    * @param amount - The amount of funds to be released.
    * @returns A promise that resolves when the operation is complete.
    */
-  releaseFunds(userId: string, amount: number, walletId: string, cryptoType: string): Promise<void>;
+  releaseFunds(userId: string, amount: number, walletId: string, cryptoType: string, to: string): Promise<void>;
 
   /**
    * Check if a specified amount of funds is retained for a user.
