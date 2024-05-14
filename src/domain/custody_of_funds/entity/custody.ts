@@ -1,9 +1,9 @@
-export interface CustodyOfFundsUserEntity {
+export interface UserFundsInCustodyEntity {
   uuid: string;
+  amount: number;
   userId: string;
-  funds: number;
   walletId: string;
-  typeCrypto: string;
+  cryptoType: string;
   createdAt: Date;
   updatedAt: Date;
 }
