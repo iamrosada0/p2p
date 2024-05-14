@@ -1,84 +1,77 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Web3 from 'web3';
 import { TransactionValue } from '../../../domain/transaction/value/transaction-value';
-import { TransactionRepository, WalletRepository } from '../../repositories';
+import { TransactionRepository, WalletRepository, CustodyRepository } from '../../repositories';
 
 export class TransactionUseCase {
   private readonly web3: Web3;
-  private nonce: number | undefined; // Define nonce property
+  private nonce: number | undefined;
 
   constructor(
     private readonly transactionRepository: TransactionRepository,
     private readonly walletRepository: WalletRepository,
+    private readonly custodyRepository: CustodyRepository,
     infuraProjectId: string,
   ) {
-    // Initialize Web3 with the Infura endpoint
     this.web3 = new Web3(`https://holesky.infura.io/v3/${infuraProjectId}`);
   }
 
-  public transaction = async (userId: string, toAddress: string, amountInEther: number) => {
-    // Fetch user wallet details
+  public async transaction(userId: string, toAddress: string, amountInEther: number) {
     const detailUserWallet = await this.walletRepository.findDetailWalletByUserId(userId);
 
-    // Create TransactionValue object
+    if (!detailUserWallet) {
+      throw new Error('User wallet not found');
+    }
+
     const transactionValue = new TransactionValue(
       userId,
       toAddress,
       amountInEther,
       this.web3,
-      detailUserWallet?.privateKey,
-      detailUserWallet?.publicKey,
-      detailUserWallet?.addressUserWallet,
+      detailUserWallet.privateKey,
+      detailUserWallet.publicKey,
+      detailUserWallet.addressUserWallet,
     );
 
-    console.log({ transactionValue }, '----?>DEUS');
-
     try {
-      // Fetch nonce and set it
-      this.nonce = await this.fetchNonce(detailUserWallet?.addressUserWallet);
-
-      // Increase the gas price to ensure it's higher than the base fee
+      this.nonce = await this.fetchNonce(detailUserWallet.addressUserWallet);
       const transactionObject = {
-        from: detailUserWallet?.addressUserWallet,
+        from: detailUserWallet.addressUserWallet,
         to: transactionValue.recipientAddress,
-        value: transactionValue.value, // Use the amount in Wei from TransactionValue
-        gas: this.web3.utils.toHex(transactionValue.gasLimit), // Convert gas limit to hexadecimal
-        gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()), // Convert gas price to hexadecimal
-        nonce: this.web3.utils.toHex(this.nonce), // Convert nonce to hexadecimal
+        value: transactionValue.value,
+        gas: this.web3.utils.toHex(transactionValue.gasLimit),
+        gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()),
+        nonce: this.web3.utils.toHex(this.nonce),
       };
 
-      // Adjust gas price to be higher than the base fee
-      transactionObject.gasPrice = this.web3.utils.toHex(await this.web3.eth.getGasPrice());
-
-      // Sign the transaction
       const signedTransaction = await this.web3.eth.accounts.signTransaction(
         transactionObject,
-        transactionValue.privateKey,
+        detailUserWallet.privateKey,
       );
 
-      // Send the signed transaction to the network
       await this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
 
-      // Save the transaction details to the repository
-      const transactionValueCopy = { ...transactionValue };
+      // Retain funds if the transaction is a deposit
+      if (toAddress === detailUserWallet.addressUserWallet) {
+        await this.custodyRepository.retainFunds(userId, amountInEther, detailUserWallet.uuid, 'ETH');
+      } else {
+        // Release funds if the transaction is a withdrawal
+        await this.custodyRepository.releaseFunds(userId, amountInEther, detailUserWallet.uuid, 'ETH', toAddress);
+      }
 
-      // Add nonce to the copy and convert it to hexadecimal
-      transactionValueCopy.nonce = Number(this.web3.utils.toHex(this.nonce));
+      const transactionValueCopy = { ...transactionValue };
+      transactionValueCopy.nonce = Number(this.nonce);
 
       const transactionProcessedSuccessful = await this.transactionRepository.transaction(transactionValueCopy);
 
       return transactionProcessedSuccessful;
     } catch (error: any) {
       console.error('Error while sending transaction:', error);
-      throw error; // Rethrow the error for handling in the calling function
+      throw error;
     }
-  };
+  }
 
-  private async fetchNonce(addressUserWallet: string | undefined): Promise<number> {
-    if (!addressUserWallet) {
-      throw new Error('Sender address is undefined');
-    }
-
+  private async fetchNonce(addressUserWallet: string): Promise<number> {
     try {
       const nonce = await this.web3.eth.getTransactionCount(addressUserWallet, 'pending');
       return Number(nonce);
