@@ -1,5 +1,5 @@
-export * from './custody_of_funds/entity/custody';
-export * from './custody_of_funds/value/custody-value';
+export * from './custody/entity/custody';
+export * from './custody/value/custody-value';
 export * from './transaction/entity/transactions';
 export * from './transaction/value/transaction-value';
 export * from './user/entity/user';
