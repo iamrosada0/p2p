@@ -18,53 +18,6 @@ export class TransactionValue implements TransactionEntity {
   public createdAt: Date;
   public updatedAt: Date;
 
-  // constructor(
-  //   userId: string,
-  //   toAddress: string,
-  //   amountInEther: number,
-  //   web3: Web3,
-  //   privateKey: string | undefined,
-  //   publicKey: string | undefined,
-  //   addressUserWallet: string | undefined,
-  // ) {
-  //   this.userId = userId;
-  //   this.createdAt = new Date();
-  //   this.updatedAt = new Date();
-  //   this.web3 = web3;
-
-  //   // Generate random UUID
-  //   this.uuid = randomBytes(16).toString('hex');
-
-  //   // Set recipient address
-  //   this.recipientAddress = toAddress;
-
-  //   // Convert amount to wei
-  //   this.value = this.web3.utils.toWei(amountInEther.toString(), 'ether');
-
-  //   // Set gas limit and price
-  //   this.gasLimit = 21000; // Default gas limit
-  //   this.gasPrice = 100; // Default gas price
-
-  //   // Fetch the current nonce for the sender's account
-  //   this.web3.eth
-  //     .getTransactionCount(addressUserWallet!, 'pending')
-  //     .then((count) => {
-  //       // Set nonce to the next available nonce
-  //       this.nonce = Number(count);
-  //       this.constructTransactionObject();
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error fetching nonce:', error);
-  //       throw error; // Throw error for handling in calling function
-  //     });
-
-  //   // Set user wallet address
-  //   this.addressUserWallet = addressUserWallet || '';
-
-  //   // Set public and private keys
-  //   this.publicKey = publicKey || '';
-  //   this.privateKey = privateKey || '';
-  // }
   constructor(
     userId: string,
     toAddress: string,
