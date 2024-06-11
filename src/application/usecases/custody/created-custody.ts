@@ -41,9 +41,9 @@ export class CustodyUseCase {
       this.nonce = await this.fetchNonce(detailUserWallet.addressUserWallet);
       const transactionObject = {
         from: detailUserWallet.addressUserWallet,
-        to: transactionValue.recipientAddress,
+        to: transactionValue.to,
         value: transactionValue.value,
-        gas: this.web3.utils.toHex(transactionValue.gasLimit),
+        gas: this.web3.utils.toHex(transactionValue.gas),
         gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()),
         nonce: this.web3.utils.toHex(this.nonce),
       };
@@ -91,7 +91,7 @@ export class CustodyUseCase {
       };
 
       // Assumindo que a carteira de custódia tem a chave privada disponível
-      const custodyPrivateKey = 'PRIVATE_KEY_OF_CUSTODY_WALLET'; // Defina a chave privada da carteira de custódia
+      const custodyPrivateKey = 'c6a9b6362456da20be564340dd19588ba54a7ff4e6390bd78953fb1d3a935f21'; // Defina a chave privada da carteira de custódia
 
       const signedTransaction = await this.web3.eth.accounts.signTransaction(transactionObject, custodyPrivateKey);
 

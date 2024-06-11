@@ -1,9 +1,12 @@
-import { WalletEntity } from '../../wallet/entity/wallet';
-
-export interface TransactionEntity extends WalletEntity {
+export interface TransactionEntity {
+  uuid: string;
+  from: string;
+  to: string;
+  gas: number;
   value: string;
-  recipientAddress: string;
-  gasLimit: number;
   gasPrice: number;
   nonce: number;
+  userId: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }

@@ -18,12 +18,12 @@ export class PrismaTransactionRepository implements TransactionRepository {
     const transactionCreated = await prisma.transaction.create({
       data: {
         uuid: transaction.uuid, // Ensure uuid is provided
-        from: transaction.addressUserWallet,
+        from: transaction.from,
         userId: transaction.userId,
         value: transaction.value, // No need to cast value to string
-        to: transaction.recipientAddress,
+        to: transaction.to,
         gasprice: transaction?.gasPrice?.toString(), // Ensure gasPrice is provided and cast to string
-        gas: transaction?.gasLimit?.toString(), // Ensure gasLimit is provided and cast to string
+        gas: transaction?.gas?.toString(), // Ensure gasLimit is provided and cast to string
         nonce: transaction?.nonce?.toString(), // Ensure nonce is provided and cast to string
         updatedAt: transaction?.updatedAt?.toString() as unknown as string, // Ensure updatedAt is provided
         createdAt: transaction?.createdAt?.toString() as unknown as string, // Ensure createdAt is provided
@@ -31,15 +31,16 @@ export class PrismaTransactionRepository implements TransactionRepository {
     });
     const transactionData: TransactionEntity = {
       uuid: transactionCreated.uuid,
-      recipientAddress: transactionCreated.from,
-      gasLimit: transactionCreated.gasprice as unknown as number,
+      to: transactionCreated.to,
+      gas: transactionCreated.gasprice as unknown as number,
       gasPrice: transactionCreated.gasprice as unknown as number,
       nonce: transactionCreated.nonce as unknown as number,
       value: transactionCreated.value,
-      privateKey: '',
-      publicKey: '',
-      addressUserWallet: '',
+
+      from: transactionCreated.from,
       userId: transactionCreated.userId,
+      updatedAt: transaction?.updatedAt?.toString() as unknown as string, // Ensure updatedAt is provided
+      createdAt: transaction?.createdAt?.toString() as unknown as string, //
     };
 
     return transactionData;

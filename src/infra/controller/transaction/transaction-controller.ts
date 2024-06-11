@@ -11,6 +11,7 @@ export class TransactionController {
       const { userId, toAddress, amountInEther } = req.body;
 
       await this.transactionUseCase.transaction(userId, toAddress, amountInEther);
+
       res.status(201).json({ message: 'User transaction processed successfully' });
     } catch (error: unknown) {
       if (error instanceof Error) {
