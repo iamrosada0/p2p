@@ -10,15 +10,12 @@ import { PrismaCustodyRepository } from '../../repositories/prisma-custody-repos
 const userRepo = new PrismaUsersRepository();
 const walletRepo = new PrismaWalletRepository();
 const transactionRepo = new PrismaTransactionRepository();
-const custodyRepo = new PrismaCustodyRepository(
-  process.env.APP_INFURA_ID_PROJECT!,
-  '3SED3AGJMV6YN2GHQFTJN5JP28TGKD1QBZ',
-);
+const custodyRepo = new PrismaCustodyRepository(process.env.APP_INFURA_ID_PROJECT!, 'key-infura');
 /**
  * Iniciamos casos de uso
  */
 
-new CustodyUseCase(process.env.APP_INFURA_ID_PROJECT!, '3SED3AGJMV6YN2GHQFTJN5JP28TGKD1QBZ');
+new CustodyUseCase(process.env.APP_INFURA_ID_PROJECT!, 'key-infura');
 
 // custodyRepo.fetchAndCheckWalletValues();
 const interval = setInterval(() => {

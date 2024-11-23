@@ -28,7 +28,7 @@ export class CustodyUseCase {
             startblock: 0,
             endblock: 99999999,
             sort: 'asc',
-            apikey: '3SED3AGJMV6YN2GHQFTJN5JP28TGKD1QBZ',
+            apikey: 'key-infura',
           },
         }),
       );
