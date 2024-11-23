@@ -1,71 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CustodyRepository, CustodyUseCase } from '../../application';
 import { prisma } from '../database/prisma/prisma';
-import { CustodyRepository } from '../../application';
 
 export class PrismaCustodyRepository implements CustodyRepository {
-  async retainFunds(userId: string, amount: number, walletId: string, cryptoType: string): Promise<void> {
-    // Check if the user with the specified userId exists
-    const user = await prisma.user.findUnique({ where: { uuid: userId } });
-    if (!user) {
-      throw new Error(`User with ID ${userId} does not exist`);
-    }
+  private readonly custodyUseCase: CustodyUseCase;
 
-    // Check if the wallet with the specified walletId exists
-    const wallet = await prisma.wallet.findUnique({ where: { uuid: walletId } });
-    if (!wallet) {
-      throw new Error(`Wallet with ID ${walletId} does not exist`);
-    }
+  constructor(infuraProjectId: string, etherscanApiKey: string) {
+    this.custodyUseCase = new CustodyUseCase(infuraProjectId, etherscanApiKey);
+  }
 
-    // Proceed with creating the retainedFunds record
+  async fetchAndCheckWalletValues(): Promise<void> {
     try {
-      await prisma.retainedFunds.create({
-        data: {
-          userId,
-          walletId,
-          amount,
-          cryptoType,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
+      const wallets = await prisma.wallet.findMany({
+        select: { addressUserWallet: true },
       });
-    } catch (error: any) {
-      throw new Error(`Failed to retain funds: ${error.message}`);
+
+      const addresses = wallets.map((wallet) => wallet.addressUserWallet);
+      await this.custodyUseCase.checkReceivedValues(addresses);
+    } catch (error) {
+      console.error('Error fetching wallet addresses from the database:', error);
     }
-  }
-
-  async releaseFunds(userId: string, amount: number, walletId: string, cryptoType: string): Promise<void> {
-    const retainedFund = await prisma.retainedFunds.findFirst({
-      where: {
-        userId,
-        walletId,
-        cryptoType,
-      },
-    });
-
-    if (!retainedFund || retainedFund.amount < amount) {
-      throw new Error('Insufficient retained funds');
-    }
-
-    await prisma.retainedFunds.update({
-      where: {
-        id: retainedFund.id,
-      },
-      data: {
-        amount: retainedFund.amount - amount,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-  }
-
-  async isFundsRetained(userId: string, amount: number, walletId: string, cryptoType: string): Promise<boolean> {
-    const retainedFund = await prisma.retainedFunds.findFirst({
-      where: {
-        userId,
-        walletId,
-        cryptoType,
-      },
-    });
-
-    return !!retainedFund && retainedFund.amount >= amount;
   }
 }
