@@ -1,128 +1,60 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Web3 from 'web3';
-import { TransactionValue, UserFundsInCustodyValue } from '../../../domain';
-import { CustodyRepository, WalletRepository } from '../../repositories';
+import axios from 'axios';
+import BN from 'bn.js';
+import Bottleneck from 'bottleneck';
 
 export class CustodyUseCase {
   private readonly web3: Web3;
-  private nonce: number | undefined;
+  private readonly ETHERSCAN_API_KEY: string;
+  private readonly limiter: Bottleneck;
 
-  private custodyWalletAddress: string; // Adicionando o endereço da carteira de custódia
-
-  constructor(
-    private readonly custodyRepository: CustodyRepository,
-    private readonly walletRepository: WalletRepository,
-    infuraProjectId: string,
-    custodyWalletAddress: string, // Recebendo o endereço da carteira de custódia no construtor
-  ) {
+  constructor(infuraProjectId: string, etherscanApiKey: string) {
     this.web3 = new Web3(`https://holesky.infura.io/v3/${infuraProjectId}`);
-    this.custodyWalletAddress = custodyWalletAddress; // Inicializando a carteira de custódia
+    this.ETHERSCAN_API_KEY = etherscanApiKey;
+    this.limiter = new Bottleneck({
+      maxConcurrent: 1,
+      minTime: 1250, // Ensure minimum time between requests is 1250 milliseconds (4 requests per 5 seconds)
+    });
   }
 
-  // Retain funds from the user's wallet and transfer to custody
-  public retainFunds = async (userId: string, amountInEther: number, walletId: string, cryptoType: string) => {
-    const detailUserWallet = await this.walletRepository.findDetailWalletByUserId(userId);
-
-    if (!detailUserWallet) {
-      throw new Error('User wallet not found');
-    }
-
-    const transactionValue = new TransactionValue(
-      userId,
-      this.custodyWalletAddress,
-      amountInEther,
-      this.web3,
-      detailUserWallet.privateKey,
-      detailUserWallet.publicKey,
-      detailUserWallet.addressUserWallet,
-    );
-
+  async getReceivedValue(address: string): Promise<BN> {
     try {
-      this.nonce = await this.fetchNonce(detailUserWallet.addressUserWallet);
-      const transactionObject = {
-        from: detailUserWallet.addressUserWallet,
-        to: transactionValue.to,
-        value: transactionValue.value,
-        gas: this.web3.utils.toHex(transactionValue.gas),
-        gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()),
-        nonce: this.web3.utils.toHex(this.nonce),
-      };
-
-      const signedTransaction = await this.web3.eth.accounts.signTransaction(
-        transactionObject,
-        detailUserWallet.privateKey,
+      const response = await this.limiter.schedule(() =>
+        axios.get('https://api.holesky.etherscan.io/api', {
+          params: {
+            module: 'account',
+            action: 'txlist',
+            address: address,
+            startblock: 0,
+            endblock: 99999999,
+            sort: 'asc',
+            apikey: '3SED3AGJMV6YN2GHQFTJN5JP28TGKD1QBZ',
+          },
+        }),
       );
 
-      await this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
+      const transactions = response.data.result;
+      let totalReceived = new BN('0');
 
-      const userFundsInCustody = new UserFundsInCustodyValue(userId, amountInEther, cryptoType, walletId);
+      for (const tx of transactions) {
+        if (tx.to.toLowerCase() === address.toLowerCase() && tx.value !== '0') {
+          totalReceived = totalReceived.add(new BN(tx.value));
+        }
+      }
 
-      await this.custodyRepository.retainFunds(
-        userFundsInCustody.userId,
-        userFundsInCustody.amount,
-        userFundsInCustody.walletId,
-        userFundsInCustody.cryptoType,
-      );
-    } catch (error: any) {
-      console.error('Error while retaining funds:', error);
-      throw error;
+      return totalReceived;
+    } catch (error) {
+      console.error(`Error fetching transactions for address ${address}:`, error);
+      return new BN('0');
     }
-  };
+  }
 
-  // Release funds from custody back to the user's specified address
-  public releaseFunds = async (
-    userId: string,
-    amountInEther: number,
-    walletId: string,
-    cryptoType: string,
-    toAddress: string,
-  ) => {
-    const userFundsInCustody = new UserFundsInCustodyValue(userId, amountInEther, cryptoType, walletId, toAddress);
-
-    try {
-      this.nonce = await this.fetchNonce(this.custodyWalletAddress);
-      const transactionObject = {
-        from: this.custodyWalletAddress,
-        to: userFundsInCustody.to,
-        value: this.web3.utils.toWei(amountInEther.toString(), 'ether'),
-        gas: this.web3.utils.toHex(21000), // Default gas limit
-        gasPrice: this.web3.utils.toHex(await this.web3.eth.getGasPrice()),
-        nonce: this.web3.utils.toHex(this.nonce),
-      };
-
-      // Assumindo que a carteira de custódia tem a chave privada disponível
-      const custodyPrivateKey = 'c6a9b6362456da20be564340dd19588ba54a7ff4e6390bd78953fb1d3a935f21'; // Defina a chave privada da carteira de custódia
-
-      const signedTransaction = await this.web3.eth.accounts.signTransaction(transactionObject, custodyPrivateKey);
-
-      await this.web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
-
-      await this.custodyRepository.releaseFunds(
-        userFundsInCustody.userId,
-        userFundsInCustody.amount,
-        userFundsInCustody.walletId,
-        userFundsInCustody.cryptoType,
-        userFundsInCustody.to!,
+  async checkReceivedValues(addresses: string[]): Promise<void> {
+    for (const address of addresses) {
+      const receivedValue = await this.getReceivedValue(address);
+      console.log(
+        `Address ${address} has received a total of ${this.web3.utils.fromWei(receivedValue.toString(), 'ether')} ETH.`,
       );
-    } catch (error: any) {
-      console.error('Error while releasing funds:', error);
-      throw error;
-    }
-  };
-
-  // Check if the specified amount of funds is retained for the user
-  public isFundsRetained = async (userId: string, amountInEther: number, walletId: string, cryptoType: string) => {
-    const isFunds = await this.custodyRepository.isFundsRetained(userId, amountInEther, walletId, cryptoType);
-    return isFunds;
-  };
-
-  // Fetch the current nonce for the user's wallet
-  private async fetchNonce(addressUserWallet: string): Promise<number> {
-    try {
-      const nonce = await this.web3.eth.getTransactionCount(addressUserWallet, 'pending');
-      return Number(nonce);
-    } catch (error: any) {
-      throw new Error('Error fetching nonce: ' + error.message);
     }
   }
 }
