@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from 'crypto';
 import Web3 from 'web3';
 import { TransactionEntity } from '../entity/transactions';
